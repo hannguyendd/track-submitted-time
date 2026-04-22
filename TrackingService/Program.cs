@@ -1,41 +1,66 @@
+using StackExchange.Redis;
+using TrackingService.Models;
+using TrackingService.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
+    ?? throw new InvalidOperationException("Redis:ConnectionString is not configured.");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(redisConnectionString));
+
+builder.Services.AddSingleton<ITimeTrackingRepository, RedisTimeTrackingRepository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
-}
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapPost("/submissions", async (SubmissionRequest request, ITimeTrackingRepository repo) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    if (string.IsNullOrWhiteSpace(request.UserId))
+        return Results.BadRequest("UserId is required.");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    await repo.RecordSubmissionAsync(request.UserId);
+    return Results.NoContent();
 })
-.WithName("GetWeatherForecast");
+.WithName("RecordSubmission");
+
+app.MapGet("/submissions/{userId}", async (string userId, ITimeTrackingRepository repo) =>
+{
+    var timestamp = await repo.GetLastSubmissionAsync(userId);
+    return timestamp is null
+        ? Results.NotFound()
+        : Results.Ok(new SubmissionResponse(userId, timestamp.Value));
+})
+.WithName("GetUserSubmission");
+
+app.MapGet("/submissions", async (
+    string? from,
+    string? to,
+    ITimeTrackingRepository repo) =>
+{
+    DateTimeOffset? fromDate = null;
+    DateTimeOffset? toDate = null;
+
+    if (from is not null && !DateTimeOffset.TryParse(from, out var parsedFrom))
+        return Results.BadRequest("Invalid 'from' date format. Use ISO 8601.");
+    else if (from is not null)
+        fromDate = DateTimeOffset.Parse(from).ToUniversalTime();
+
+    if (to is not null && !DateTimeOffset.TryParse(to, out var parsedTo))
+        return Results.BadRequest("Invalid 'to' date format. Use ISO 8601.");
+    else if (to is not null)
+        toDate = DateTimeOffset.Parse(to).ToUniversalTime();
+
+    var results = await repo.GetSubmissionsInRangeAsync(fromDate, toDate);
+    return Results.Ok(results.Select(r => new SubmissionResponse(r.UserId, r.LastSubmittedAt)));
+})
+.WithName("GetSubmissions");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
