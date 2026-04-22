@@ -24,11 +24,11 @@ public class RedisTimeTrackingRepository(IConnectionMultiplexer redis) : ITimeTr
         DateTimeOffset? from, DateTimeOffset? to)
     {
         var min = from.HasValue
-            ? (double)from.Value.ToUnixTimeSeconds()
+            ? from.Value.ToUnixTimeSeconds()
             : double.NegativeInfinity;
 
         var max = to.HasValue
-            ? (double)to.Value.ToUnixTimeSeconds()
+            ? to.Value.ToUnixTimeSeconds()
             : double.PositiveInfinity;
 
         var entries = await _db.SortedSetRangeByScoreWithScoresAsync(Key, min, max);
