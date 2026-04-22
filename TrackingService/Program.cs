@@ -48,15 +48,19 @@ app.MapGet("/submissions", async (
     DateTimeOffset? fromDate = null;
     DateTimeOffset? toDate = null;
 
-    if (from is not null && !DateTimeOffset.TryParse(from, out var parsedFrom))
-        return Results.BadRequest("Invalid 'from' date format. Use ISO 8601.");
-    else if (from is not null)
-        fromDate = DateTimeOffset.Parse(from).ToUniversalTime();
+    if (from is not null)
+    {
+        if (!DateTimeOffset.TryParse(from, out var parsedFrom))
+            return Results.BadRequest("Invalid 'from' date format. Use ISO 8601.");
+        fromDate = parsedFrom.ToUniversalTime();
+    }
 
-    if (to is not null && !DateTimeOffset.TryParse(to, out var parsedTo))
-        return Results.BadRequest("Invalid 'to' date format. Use ISO 8601.");
-    else if (to is not null)
-        toDate = DateTimeOffset.Parse(to).ToUniversalTime();
+    if (to is not null)
+    {
+        if (!DateTimeOffset.TryParse(to, out var parsedTo))
+            return Results.BadRequest("Invalid 'to' date format. Use ISO 8601.");
+        toDate = parsedTo.ToUniversalTime();
+    }
 
     var results = await repo.GetSubmissionsInRangeAsync(fromDate, toDate);
     return Results.Ok(results.Select(r => new SubmissionResponse(r.UserId, r.LastSubmittedAt)));
