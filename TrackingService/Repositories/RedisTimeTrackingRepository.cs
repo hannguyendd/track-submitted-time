@@ -33,9 +33,11 @@ public class RedisTimeTrackingRepository(IConnectionMultiplexer redis) : ITimeTr
 
         var entries = await _db.SortedSetRangeByScoreWithScoresAsync(Key, min, max);
 
-        return entries.Select(e => (
-            UserId: (string)e.Element!,
-            LastSubmittedAt: DateTimeOffset.FromUnixTimeSeconds((long)e.Score)
-        ));
+        return entries
+            .Where(e => !e.Element.IsNull)
+            .Select(e => (
+                UserId: (string)e.Element!,
+                LastSubmittedAt: DateTimeOffset.FromUnixTimeSeconds((long)e.Score)
+            ));
     }
 }
