@@ -3,6 +3,6 @@ namespace TrackingService.Repositories;
 public interface ITimeTrackingRepository
 {
     Task RecordSubmissionAsync(string userId);
-    Task<DateTime?> GetLastSubmissionAsync(string userId);
-    Task<IEnumerable<(string UserId, DateTime LastSubmittedAt)>> GetSubmissionsInRangeAsync(DateTime? from, DateTime? to);
+    Task<DateTimeOffset?> GetLastSubmissionAsync(string userId);
+    Task<IEnumerable<(string UserId, DateTimeOffset LastSubmittedAt)>> GetSubmissionsInRangeAsync(DateTimeOffset? from, DateTimeOffset? to);
 }

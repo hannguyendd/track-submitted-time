@@ -1,3 +1,3 @@
 namespace TrackingService.Models;
 
-public record SubmissionResponse(string UserId, DateTime LastSubmittedAt);
+public record SubmissionResponse(string UserId, DateTimeOffset LastSubmittedAt);
