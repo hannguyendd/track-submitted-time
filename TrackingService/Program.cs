@@ -1,3 +1,4 @@
+using System.Text.Json;
 using StackExchange.Redis;
 using TrackingService.Models;
 using TrackingService.Repositories;
@@ -6,10 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
+
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
     ?? throw new InvalidOperationException("Redis:ConnectionString is not configured.");
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(redisConnectionString));
 
 builder.Services.AddSingleton<ITimeTrackingRepository, RedisTimeTrackingRepository>();
