@@ -1,6 +1,49 @@
-@TrackingService_HostAddress = http://localhost:5228
+@host = http://localhost:5228
 
-GET {{TrackingService_HostAddress}}/weatherforecast/
-Accept: application/json
+### Record submission for user-1
+POST {{host}}/submissions
+Content-Type: application/json
+
+{
+  "userId": "user-1"
+}
 
 ###
+
+### Record submission for user-2
+POST {{host}}/submissions
+Content-Type: application/json
+
+{
+  "userId": "user-2"
+}
+
+###
+
+### Get last submission for user-1
+GET {{host}}/submissions/user-1
+
+###
+
+### Get last submission for unknown user (expect 404)
+GET {{host}}/submissions/unknown-user
+
+###
+
+### Get all submissions
+GET {{host}}/submissions
+
+###
+
+### Get submissions in a time range (adjust dates as needed)
+GET {{host}}/submissions?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z
+
+###
+
+### Submit with missing userId (expect 400)
+POST {{host}}/submissions
+Content-Type: application/json
+
+{
+  "userId": ""
+}
