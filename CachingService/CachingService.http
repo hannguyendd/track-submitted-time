@@ -1,0 +1,68 @@
+@baseUrl = http://localhost:5232
+
+### Get all products
+GET {{baseUrl}}/api/products
+
+### Get product by ID
+# First, run the "Get all products" request above and copy an ID
+@productId = 550e8400-e29b-41d4-a716-446655440000
+GET {{baseUrl}}/api/products/{{productId}}
+
+### Get products by category
+GET {{baseUrl}}/api/products/category/Electronics
+
+### Get products by category - Furniture
+GET {{baseUrl}}/api/products/category/Furniture
+
+### Get products by ID list (batch)
+POST {{baseUrl}}/api/products/batch
+Content-Type: application/json
+
+{
+	"ids": ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]
+}
+
+### Create new product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+	"name": "USB-C Cable",
+	"price": 19.99,
+	"category": "Electronics",
+	"stock": 100,
+	"description": "High-speed USB-C 3.1 cable, 6ft"
+}
+
+### Create another product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+	"name": "Desk Lamp",
+	"price": 49.99,
+	"category": "Furniture",
+	"stock": 5,
+	"description": "LED desk lamp with adjustable brightness"
+}
+
+### Update product
+# Replace {{productId}} with an actual product ID
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+	"name": "Laptop Pro",
+	"price": 1499.99,
+	"category": "Electronics",
+	"stock": 10,
+	"description": "High-performance laptop with 32GB RAM"
+}
+
+### Delete product
+# Replace {{productId}} with an actual product ID
+DELETE {{baseUrl}}/api/products/{{productId}}
+
+### Test cache hit - request same product twice
+# Run this twice to see the difference in logs
+GET {{baseUrl}}/api/products/550e8400-e29b-41d4-a716-446655440000
